@@ -11,6 +11,7 @@ uses
 var
   g:TGraph<integer,integer>;
   cons:TGraph<integer,integer>.TConnectionList;
+  cons2:TGraph<integer,integer>.TConnectionList;
   con:TGraph<integer,integer>.TConnection;
   i,action,tmp,tmp2,tmp3:integer;
 
@@ -42,19 +43,22 @@ begin
           g.AddConnection(tmp,tmp2,tmp3);
         end;
       4:begin
-          write('enter connection number (starting from 0): ');
+          write('enter connection start and finish point indexes: ');
           readln(tmp);
-          g.DeleteConnection(tmp);
+          readln(tmp2);
+          g.DeleteConnection(tmp,tmp2);
         end;
       5:begin
-          for con in g.connections do
-            writeln(con.item1,' ',con.item2,' ',con.weight);
+          for cons in g.connections do
+            for con in cons do
+            writeln(con.&to,' ',con.weight);
         end;
       6:begin
           write('enter element index (starting from 0): ');
           readln(tmp);
-          for con in g.GetItemConnections(tmp) do
-            writeln(con.item1,' ',con.item2,' ',con.weight);
+          for cons in g.GetItemConnections(tmp) do
+            for con in cons do
+              writeln(con.&to,' ',con.weight);
         end;
     end;
   until action=7;

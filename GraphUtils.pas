@@ -9,48 +9,34 @@ type
   TGraph<TItem,TConnectionWeightType>=class
     type
       TConnection=record
-        item1,item2:integer;
+        &to:integer;
         weight:TConnectionWeightType;
-        function IncludesElement(index:integer):boolean;
-        function OtherElement(index:integer):integer;
       end;
       TConnectionList=TList<TConnection>;
     var
       elems:TList<TItem>;
-      connections:TList<TConnection>;
+      connections:TList<TConnectionList>;
     constructor Create();
     procedure AddItem(item:TItem);
     procedure AddConnection(index1,index2:integer;newweight:TConnectionWeightType);
     procedure DeleteItem(index:integer);
-    procedure DeleteConnection(index:integer);
+    procedure DeleteConnection(elem:integer;&to:integer);
     function GetItemConnections(index:integer):TConnectionList;
 
   end;
 
 implementation
 
-  function TGraph<TItem,TConnectionWeightType>.TConnection.IncludesElement(index:integer):boolean;
-  begin
-     if (item1=index) or (item2=index) then
-         Result:=true
-     else
-         Result:=false
-  end;
-
-  function TGraph<TItem,TConnectionWeightType>.TConnection.OtherElement(index:integer):integer;
-  begin
-    Result:=item1+item2-index;
-  end;
-
   procedure TGraph<TItem,TConnectionWeightType>.AddItem(item:TItem);
   begin
+    connections.Add(TConnectionList.Create);
     elems.Add(item);
   end;
 
   constructor TGraph<TItem,TConnectionWeightType>.Create();
   begin
     elems:=TList<TItem>.Create();
-    connections:=TList<TConnection>.Create();
+    connections:=TList<TConnectionList>.Create();
   end;
 
   procedure TGraph<TItem,TConnectionWeightType>.AddConnection(index1,index2:integer;newweight:TConnectionWeightType);
@@ -59,44 +45,47 @@ implementation
   begin
     with con do
       begin
-        item1:=index1;
-        item2:=index2;
+        &to:=index2;
         weight:=newweight;
       end;
-    Connections.Add(con);
+    Connections[index1].Add(con);
   end;
 
   procedure TGraph<TItem,TConnectionWeightType>.DeleteItem(index:integer);
   var
-    i:integer;
+    i,j:integer;
   begin
-    i:=0;
-    while i<connections.Count do
-      begin
-        if (connections[i].item1=index) or (connections[i].item2=index) then
-          connections.Delete(i);
-        inc(i);
-      end;
-    elems.Delete(i);
+    connections.Delete(index); //bug
+    elems.Delete(index);       //bug
+    for i:=0 to connections.Count-1 do
+      for j:=0 to connections[i].Count-1 do
+        begin
+          if connections[i][j].&to=index then
+            begin
+              connections[i].Delete(j);
+            end;
+        end;
   end;
 
-  procedure TGraph<TItem,TConnectionWeightType>.DeleteConnection(index:integer);
+  procedure TGraph<TItem,TConnectionWeightType>.DeleteConnection(elem:integer;&to:integer);
+  var
+    index:integer;
   begin
-    connections.Delete(index);
+    index:=0;
+    while index<connections[elem].Count do
+    begin
+      if connections[elem][index].&to=&to then
+      begin
+        connections[elem].Delete(index);
+        break;
+      end;
+      inc(index);
+    end;
   end;
 
   function TGraph<TItem,TConnectionWeightType>.GetItemConnections(index:integer):TConnectionList;
-  var
-    lst:TConnectionList;
-    con:TConnection;
   begin
-    lst:=TConnectionList.Create();
-    for con in connections do
-    begin
-      if con.IncludesElement(index) then
-        lst.Add(con)
-    end;
-    result:=lst;
+    result:=connections[index];
   end;
 
 end.
